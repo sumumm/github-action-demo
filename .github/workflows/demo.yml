@@ -19,6 +19,11 @@ jobs:
     runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
+    # push时，只有提交信息包含 [deploy] 或 [update] 标签时触发
+    if: |
+        github.event_name == 'push' && (
+        contains(github.event.head_commit.message, '[deploy]') || contains(github.event.head_commit.message, '[update]')
+        )
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4

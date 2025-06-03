@@ -1,0 +1,42 @@
+name: Context demo -- github
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "master" branch
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    # push时，只有提交信息包含 [deploy] 或 [update] 标签时触发
+    if: |
+        github.event_name == 'push' && (
+        contains(github.event.head_commit.message, '[deploy]') || contains(github.event.head_commit.message, '[update]')
+        )
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+
+      - name: set time
+        run: |
+          TIME="$(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M:%S')"
+          echo "TIME=$TIME" >> $GITHUB_ENV
+
+      # Prints the current time in Shanghai timezone
+      - name: print time
+        run: echo "Current time in Shanghai ${{ env.TIME }}"
+        
+      # Prints the current time in UTC
+      - name: print utc time
+        run: echo "Current UTC time $(date -u +'%Y-%m-%d %H:%M:%S')"
