@@ -54,23 +54,30 @@ jobs:
           cd target-repo
           echo "REPO_NAME=$(git config --get remote.origin.url | sed -n 's#.*github.com/\(.*\)\.git#\1#p')" >> $GITHUB_OUTPUT
           echo "COMMIT_ID=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
           echo "COMMIT_MESSAGE=$(git log -1 --pretty=%B | head -n1)" >> $GITHUB_OUTPUT
 
       - name: Print commit info
         run: |
           echo "other Repository Name: ${{ steps.extract_commit_info.outputs.REPO_NAME }}"
           echo "other Commit ID: ${{ steps.extract_commit_info.outputs.COMMIT_ID }}"
+          echo "other Short SHA: ${{ steps.extract_commit_info.outputs.SHORT_SHA }}"
           echo "other Commit Message: ${{ steps.extract_commit_info.outputs.COMMIT_MESSAGE }}"
 
       - name: Get own repository info
+        id: own_commit_info
         run: |
           echo "own Repository Name: ${{ github.repository }}"
           echo "own Commit ID: ${{ github.sha }}"
+          SHORT_SHA=$(echo "${{ github.event.head_commit.id }}" | cut -c 1-7)
+          echo "own Short SHA: $SHORT_SHA"
+          echo "OWN_SHORT_SHA=$SHORT_SHA" >> $GITHUB_OUTPUT
           echo "own Commit Message: ${{ github.event.head_commit.message }}"
 
       - name: own & other
         run: |
           echo "${{ github.repository }}@${{ github.sha }} && ${{ steps.extract_commit_info.outputs.REPO_NAME }}@${{ steps.extract_commit_info.outputs.COMMIT_ID }} 🚀"
+          echo "${{ github.repository }}@${{ steps.own_commit_info.outputs.OWN_SHORT_SHA }} && ${{ steps.extract_commit_info.outputs.REPO_NAME }}@${{ steps.extract_commit_info.outputs.SHORT_SHA }} 🚀"
 
       - name: create a directory for docs
         run: |
@@ -84,4 +91,4 @@ jobs:
           single-commit: true
           branch: gh-pages
           folder: public
-          commit-message: "Deploy ${{ github.repository }}@${{ github.sha }} && ${{ steps.extract_commit_info.outputs.REPO_NAME }}@${{ steps.extract_commit_info.outputs.COMMIT_ID }} 🚀"
+          commit-message: "Deploy ${{ github.repository }}@${{ steps.own_commit_info.outputs.OWN_SHORT_SHA }} && ${{ steps.extract_commit_info.outputs.REPO_NAME }}@${{ steps.extract_commit_info.outputs.SHORT_SHA }} 🚀"
